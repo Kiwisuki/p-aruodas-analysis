@@ -71,9 +71,11 @@ def extract_coordinates(tree: html.HtmlElement) -> Tuple[float, float]:
     Extracts and returns the coordinates of the property from the given HTML tree.
     '''
     urls = extract_thumbs(tree)
+    pattern = r'\d{2}\.\d+'
     for url in urls:
-        if 'maps.google' in url:
-            return eval(url.split('=')[2])
+        if 'maps' in url:
+            match = re.findall(pattern, url)
+            return (float(match[0]), float(match[1]))
     return None
 
 def extract_number(tree: html.HtmlElement) -> Tuple[str, bool]:

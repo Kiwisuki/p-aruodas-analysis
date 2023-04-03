@@ -15,7 +15,7 @@ def get_html(url: str) -> str:
         html_content = driver.page_source
     return html_content
 
-def parse_property(url: str) -> Dict[str, Any]:
+def scrape_property(url: str) -> Dict[str, Any]:
     """
     Extracts information about a property from a property listing page on aruodas.lt.
 
