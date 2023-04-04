@@ -3,16 +3,17 @@ from datetime import datetime
 import re
 import undetected_chromedriver as uc
 from lxml import html
-from parsing_tools import extract_element, text_strip_list, extract_photos, extract_table, extract_ad_stats, extract_address, extract_number, extract_coordinates
+from parsing_tools import extract_element, text_strip_list, extract_photos, extract_table, extract_ad_stats, extract_address, extract_number, extract_coordinates, extract_price
 
 
 def get_html(url: str) -> str:
     """Returns the HTML content of the webpage with the given URL using headless Chrome."""
     options = uc.ChromeOptions()
     options.add_argument('--headless')
-    with uc.Chrome(options=options) as driver:
-        driver.get(url)
-        html_content = driver.page_source
+    driver = uc.Chrome(options=options)
+    driver.get(url)
+    html_content = driver.page_source
+    driver.quit()
     return html_content
 
 def scrape_property(url: str) -> Dict[str, Any]:
@@ -28,7 +29,7 @@ def scrape_property(url: str) -> Dict[str, Any]:
     source = get_html(url)
     tree = html.fromstring(source)
     property_info = {
-        'Price': extract_element(tree, 'price-eur'),
+        'Price': extract_price(tree),
         'Address': extract_address(tree),
         'Phone': extract_number(tree)[0],
         'Broker': extract_number(tree)[1],
@@ -55,5 +56,5 @@ def scrape_property(url: str) -> Dict[str, Any]:
 
 if __name__ == '__main__':
     url = 'https://www.aruodas.lt/butu-nuoma-vilniuje-salininkuose-mechaniku-g-tvarkingas-butas-puikiai-gyventi-ar-4-1224363/'
-    property_info = parse_property(url)
+    property_info = scrape_property(url)
     print(property_info)

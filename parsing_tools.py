@@ -120,8 +120,21 @@ def extract_ad_stats(tree: html.HtmlElement) -> Dict[str, str]:
     Returns a dictionary containing the ad stats information.
     """
     ad_stats_dict = {}
-    ad_stats_names = text_strip_list(tree.find_class('obj-stats simple')[0].find('dl').findall('dt'))
-    ad_stats_values = text_strip_list(tree.find_class('obj-stats simple')[0].find('dl').findall('dd'))
+
+    try:
+        ad_stats_names = text_strip_list(tree.find_class('obj-stats simple')[0].find('dl').findall('dt'))
+        ad_stats_values = text_strip_list(tree.find_class('obj-stats simple')[0].find('dl').findall('dd'))
+    except IndexError:
+        ad_stats_names = text_strip_list(tree.find_class('obj-stats')[0].find('dl').findall('dt'))
+        ad_stats_values = text_strip_list(tree.find_class('obj-stats')[0].find('dl').findall('dd'))
     for i, name in enumerate(ad_stats_names):
-        ad_stats_dict[name] = ad_stats_values[i]
+            ad_stats_dict[name] = ad_stats_values[i]
     return ad_stats_dict
+
+
+def extract_price(tree: html.HtmlElement) -> str:
+    """
+    Extracts the price of the property from the HTML tree.
+    Returns the price as a string.
+    """
+    return extract_element(tree, 'price-eur') # for easier error handlin later on
