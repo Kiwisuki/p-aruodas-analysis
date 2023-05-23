@@ -12,3 +12,13 @@ class CountCalls:
     def purge_count(self): 
         self._count = 0 
         return self._count
+    
+
+def exepction_handler(func):
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(e)
+            return None
+    return inner

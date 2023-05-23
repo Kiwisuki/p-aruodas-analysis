@@ -51,6 +51,9 @@ def scrape_property(url: str) -> Dict[str, Any]:
     property_info.pop('Papildomos patalpos:', None)
     property_info.pop('Papildoma įranga:', None)
     property_info.pop('Apsauga:', None)
+
+    # replace ':' with '' and replace ' ' with '_'
+    property_info = {key.replace(':', '').replace(' ', '_'): value for key, value in property_info.items()}
     return property_info
 
 
