@@ -5,6 +5,17 @@ from typing import List, Dict, Any, Tuple
 from lxml import html
 from utils import exepction_handler
 
+
+def filter_links(links):
+    filtered_links = []
+    pattern = r'\d-\d{7}'  # Regular expression pattern for the format n-nnnnnnn
+
+    for link in links:
+        if re.search(pattern, link):
+            filtered_links.append(link)
+
+    return filtered_links
+
 def while_replace(string: str) -> str:
     """
     Replace multiple consecutive spaces with a single space.
@@ -146,3 +157,6 @@ def extract_price(tree: html.HtmlElement) -> str:
     Returns the price as a string.
     """
     return extract_element(tree, 'price-eur') # for easier error handlin later on
+
+
+# as
