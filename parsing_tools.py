@@ -158,5 +158,3 @@ def extract_price(tree: html.HtmlElement) -> str:
     """
     return extract_element(tree, 'price-eur') # for easier error handlin later on
 
-
-# as
