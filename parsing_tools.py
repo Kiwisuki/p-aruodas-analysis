@@ -1,14 +1,13 @@
 from datetime import datetime
 from typing import Any, Dict, List, Tuple
 import logging
+import re
 
 from lxml import html
-import re
+from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 
 from utils import exception_handler
-
-
 
 def filter_links(links: List[str]) -> List[str]:
     filtered_links = []
@@ -167,6 +166,112 @@ def extract_price(tree: html.HtmlElement) -> str:
     """
     return extract_element(tree, 'price-eur') # for easier error handlin later on
 
+@exception_handler
+def extract_distance_stats(soup: BeautifulSoup) -> Dict[str, Any]:
+    '''
+    Extracts the distance stats such as kindergardens and schools from soup
+    Returns a dictionary containing the distance stats'''
+    stat_value_class = 'stat-col-first'
+    stat_name_class = 'stat-col-second'
+
+    stat_value_elements = soup.find_all('td', class_=stat_value_class)
+    stat_name_elements = soup.find_all('td', class_=stat_name_class)
+
+    stat_values = [element.text.strip() for element in stat_value_elements]
+    stat_names = [element.text.strip() for element in stat_name_elements]
+
+    #remove excess whitespace and \n
+    stat_values = [value.replace('\n', '') for value in stat_values]
+    stat_values = [value.replace('  ', '') for value in stat_values]
+
+    # first three are kindergardens
+    kindergardens = stat_names[:3]
+    kindergardens_dist = stat_values[:3]
+
+    # second three are schools
+    schools = stat_names[3:6]
+    schools_dist = stat_values[3:6]
+    # third three are supermarkets
+    supermarkets = stat_names[6:9]
+    supermarkets_dist = stat_values[6:9]
+
+    stop_names_class = 'stop-name'
+    stop_names = soup.find_all('span', class_=stop_names_class)
+    stop_names = [name.text.strip() for name in stop_names]
+    stop_dist = stat_values[9:12]
+
+    buses = [re.findall(r'\d+[A-Z]+|\d+', name) for name in stat_names[-3:]]
+
+    # create a dict with same keys as variable names
+    dist_stats = {
+        'Kindergardens': kindergardens,
+        'Kindergardens_dist': kindergardens_dist,
+        'Schools': schools,
+        'Schools_dist': schools_dist,
+        'Supermarkets': supermarkets,
+        'Supermarkets_dist': supermarkets_dist,
+        'Stop_names': stop_names,
+        'Stop_dist': stop_dist,
+        'Buses': buses
+    }
+    return dist_stats
+
+@exception_handler
+def extract_heating_est(soup: BeautifulSoup) -> str:
+    '''
+    Extracts the heating estimation from soup
+    Returns a string containing the heating estimation,
+    preprocessing is not applied, because of different unit possibilities
+    '''
+    heating_est_class = 'cell-data--small'
+    heating_est = soup.find('span', class_=heating_est_class).text
+    return heating_est
+
+@exception_handler
+def extract_pollution_stats(soup: BeautifulSoup) -> Dict[str, str]:
+    '''
+    Extracts the pollution stats from soup
+    Returns a dictionary containing the pollution stats,
+    no preprocessing is applied, because of different unit possibilities
+    '''
+    pollution_class = 'air-pollution__title'
+    pollution = soup.find_all('div', class_=pollution_class)
+
+    # get contents of span inside
+    pollution_values = [p.find('span').text for p in pollution]
+
+    # get text of div only
+    pollution_names = [p.text for p in pollution]
+    pollution_names = [p.split('(')[0].strip() for p in pollution_names]
+
+    # replace 'Azoto dioksidas' with 'NO2', 'Kietos daleles' with KD10
+    pollution_names = [p.replace('Azoto dioksidas', 'NO2') for p in pollution_names]
+    pollution_names = [p.replace('Kietosios dalelės', 'KD10') for p in pollution_names]
+    pollution = dict(zip(pollution_names, pollution_values))
+    return pollution
+
+@exception_handler
+def extract_crime_stat(soup: BeautifulSoup) -> int:
+    '''
+    Extracts the crime stat from soup
+    Returns an integer containing the crime stat
+    '''
+    crime_class = 'icon-crime-gray'
+    crime = soup.find('div', class_=crime_class)
+    crime_stat = crime.find_parent('div').text.strip()
+    return int(crime_stat)
+
+@exception_handler
+def extract_is_new_project(soup: BeautifulSoup) -> bool:
+    '''
+    Extracts whether the property is a new project from soup
+    Returns a boolean
+    '''
+    new_project_id = 'advertProjectHolder'
+    new_project = soup.find('div', id=new_project_id)
+    new_project = new_project is not None
+    return new_project
+
 def extract_ad_id(string: str) -> str:
     pattern = r"\d-\d{7}"
     matches = re.findall(pattern, string)
@@ -175,7 +280,6 @@ def extract_ad_id(string: str) -> str:
     else:
         return None
     
-
 def preprocess_property(property: Dict) -> Dict:
     rename_dict = {
         'Namo_numeris': 'House_number',

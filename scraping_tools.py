@@ -9,7 +9,9 @@ import undetected_chromedriver as uc
 
 from parsing_tools import (extract_element, text_strip_list, extract_photos, extract_table,
                            extract_ad_stats, extract_address, extract_number, extract_coordinates,
-                           extract_price, filter_links, extract_by_id)
+                           extract_price, filter_links, extract_by_id, extract_distance_stats,
+                           extract_heating_est, extract_pollution_stats, extract_crime_stat, 
+                           extract_is_new_project)
 from utils import retry
 
 MAX_HTML_RETRIES = 10
@@ -56,6 +58,8 @@ def scrape_property(url: str, save_html: bool=True, **kwargs: Any) -> Dict[str, 
     source = get_html(url, save_html=save_html)
     
     tree = html.fromstring(source)
+    soup = BeautifulSoup(source, 'html.parser')
+
     property_info = {
         'Price': extract_price(tree),
         'Address': extract_address(tree),
@@ -66,14 +70,20 @@ def scrape_property(url: str, save_html: bool=True, **kwargs: Any) -> Dict[str, 
         'Date_scraped': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         'Description': extract_by_id(tree, 'collapsedText'),
         'Misc': text_strip_list(tree.body.find_class('special-comma')),
-        'Photos': extract_photos(tree)
+        'Photos': extract_photos(tree),
+        'Heating_est': extract_heating_est(soup),
+        'Crimes_last_month': extract_crime_stat(soup),
+        #'Is_new_project': extract_is_new_project(soup), # TODO: fix, always returns True
     }
 
     ad_table = extract_table(tree)
     ad_stats = extract_ad_stats(tree)
+    dist_stats = extract_distance_stats(soup)
+    pollution_stats = extract_pollution_stats(soup)
 
-    property_info.update(ad_table)
-    property_info.update(ad_stats)
+    for table in [ad_table, ad_stats, dist_stats, pollution_stats]:
+        if table:
+            property_info.update(table)
 
     property_info.pop('Ypatybės:', None)
     property_info.pop('Papildomos patalpos:', None)

@@ -8,7 +8,7 @@ from scraping_tools import get_max_page, get_property_links, get_thumbnail_links
 from utils import retry
 
 TYPES = ['butai', 'butu-nuoma', 'namai', 'namu-nuoma', 'patalpos', 'patalpu-nuoma']
-MAX_RETRIES = 2
+MAX_RETRIES = 10000
 
 
 class Scraper:
