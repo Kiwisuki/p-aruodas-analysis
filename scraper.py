@@ -1,7 +1,5 @@
 import logging
 
-from retrying import retry
-
 from db_tools import get_scraped_properties, save_property
 from parsing_tools import extract_ad_id, preprocess_property
 from scraping_tools import get_max_page, get_property_links, get_thumbnail_links, scrape_property
